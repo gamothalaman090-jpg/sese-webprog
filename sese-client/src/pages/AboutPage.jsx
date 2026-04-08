@@ -60,7 +60,7 @@ const AboutPage = () => (
                             student at National University Manila, specializing in Mobile and Web Applications.
                         </p>
                         <p>
-                            I build things for the web. From React frontends to Python-powered backends, I care
+                            I build things for the web. From React frontends to backends, I care
                             about the full picture — how things work, how they look, and how they feel when
                             someone actually uses them.
                         </p>
@@ -75,7 +75,7 @@ const AboutPage = () => (
                         </blockquote>
                     </div>
                     <div className="mt-8">
-                        <Button to="/articles" variant="primary">View My Projects</Button>
+                        <Button to="/projects" variant="primary">View My Projects</Button>
                     </div>
                 </div>
             </div>

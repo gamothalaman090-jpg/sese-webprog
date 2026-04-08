@@ -1,10 +1,12 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
-// HomePage Structure
+// Layout & Pages
 import Layout from './components/Layout';
-import ArticlePage from './pages/ArticlePage';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
+import ArticleListPage from './pages/ArticleListPage';
+import ArticlePage from './pages/ArticlePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 const routes = [
   {
@@ -19,9 +21,19 @@ const routes = [
         path: 'about',
         element: <AboutPage />,
       },
+      // Renamed from articles to projects
       {
-        path: 'articles',
+        path: 'projects',
+        element: <ArticleListPage />,
+      },
+      {
+        path: 'projects/:id',
         element: <ArticlePage />,
+      },
+      // Catch-all route to display NotFoundPage
+      {
+        path: '*',
+        element: <NotFoundPage />,
       },
     ],
   },
@@ -30,11 +42,7 @@ const routes = [
 const router = createBrowserRouter(routes);
 
 function App() {
-  return (
-    <>
-      <RouterProvider router={router} />
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
