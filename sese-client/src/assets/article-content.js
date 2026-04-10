@@ -111,7 +111,7 @@ const articles = [
             </ul>
             <p>The platform delivers personalized content experiences to millions of users while maintaining contextual relevance and continuously improving through feedback loops and model retraining cycles.</p>
         `,
-        img: 'https://images.unsplash.com/photo-1677442d019cecf9e2c39dcdb13cf57b0176080e?q=80&w=2070&auto=format&fit=crop',
+        img: 'https://plus.unsplash.com/premium_photo-1726714601217-b9268de01ca7?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     },
 ];
 
