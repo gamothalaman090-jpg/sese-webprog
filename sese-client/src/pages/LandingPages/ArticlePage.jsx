@@ -1,13 +1,13 @@
 import { useParams, Navigate } from 'react-router-dom';
-import articles from '../assets/article-content.js';
-import Button from '../components/Button';
+import articles from '../../assets/article-content.js';
+import Button from '../../components/Button';
 
 const ArticlePage = () => {
     const { id } = useParams();
     const project = articles.find((a) => a.id === id);
 
     if (!project) {
-        return <Navigate to="/projects" />;
+        return <Navigate to="/articles" />;
     }
 
     return (
@@ -16,7 +16,7 @@ const ArticlePage = () => {
             <header className="px-6 sm:px-12 lg:px-24 pt-15 pb-16 border-b-2 border-zinc-900">
                 <div className="max-w-6xl">
                     <div className="mb-12">
-                        <Button to="/projects" variant="secondary" className="px-0 border-none text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-zinc-900 group">
+                        <Button to="/articles" variant="secondary" className="px-0 border-none text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-zinc-900 group">
                             <span className="inline-block transition-transform group-hover:-translate-x-1 mr-2">←</span>
                             Back to Index
                         </Button>
@@ -104,7 +104,7 @@ const ArticlePage = () => {
                     <h3 className="font-display text-4xl sm:text-6xl font-black text-zinc-900 mb-12">
                         Ready to see more?
                     </h3>
-                    <Button to="/projects" variant="primary" className="h-16 px-12 text-lg">
+                    <Button to="/articles" variant="primary" className="h-16 px-12 text-lg">
                         Return to Archive
                     </Button>
                 </div>

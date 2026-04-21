@@ -56,6 +56,63 @@ const articles = [
         `,
         img: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop',
     },
+    {
+        id: 'realtime-commerce',
+        no: '04',
+        type: 'E-Commerce Platform',
+        stack: 'Next.js · WebSocket · MongoDB',
+        title: 'Dynamic Inventory Management',
+        desc: 'A real-time inventory and commerce platform with instant stock synchronization across multiple warehouses. Built for handling high-velocity transactions and stock updates.',
+        content: `
+            <p>Modern e-commerce demands real-time inventory visibility across distributed fulfillment centers. This platform uses WebSocket connections to maintain sub-second inventory synchronization and prevent overselling scenarios.</p>
+            <h3>Architecture Highlights</h3>
+            <ul>
+                <li>WebSocket-based bidirectional communication for live stock updates.</li>
+                <li>Distributed transaction processing with eventual consistency patterns.</li>
+                <li>Advanced caching strategies to minimize database load.</li>
+            </ul>
+            <p>The system handles thousands of concurrent transactions while maintaining data consistency and providing real-time visibility to warehouse operators and customers alike.</p>
+        `,
+        img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 'analytics-dashboard',
+        no: '05',
+        type: 'Data Visualization',
+        stack: 'Vue.js · D3.js · Apache Kafka',
+        title: 'Enterprise Analytics Dashboard',
+        desc: 'A comprehensive data visualization platform aggregating real-time metrics from diverse sources. Designed to uncover actionable insights from complex multi-dimensional datasets.',
+        content: `
+            <p>Enterprise decision-making relies on distilling massive datasets into meaningful visualizations. This dashboard ingests data streams from multiple sources using Apache Kafka and renders interactive D3.js visualizations with minimal latency.</p>
+            <h3>Key Features</h3>
+            <ul>
+                <li>Real-time data pipeline processing millions of events per minute.</li>
+                <li>Custom D3.js visualizations for domain-specific metrics.</li>
+                <li>Drill-down capabilities with automatic query optimization.</li>
+            </ul>
+            <p>Users can explore data multidimensionally, answering complex business questions without requiring engineering resources or lengthy data preparation cycles.</p>
+        `,
+        img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 'ai-content-engine',
+        no: '06',
+        type: 'AI Integration',
+        stack: 'Python · FastAPI · TensorFlow',
+        title: 'Intelligent Content Generation System',
+        desc: 'An AI-powered content generation platform leveraging neural networks for personalized recommendations and automated content creation. Designed for scale and contextual accuracy.',
+        content: `
+            <p>Content personalization at scale requires sophisticated machine learning models working in tandem with real-time inference engines. This system combines TensorFlow models with FastAPI for sub-millisecond latency in production environments.</p>
+            <h3>ML Pipeline Architecture</h3>
+            <ul>
+                <li>Custom fine-tuned models for domain-specific content generation.</li>
+                <li>Real-time feature vectorization and model inference serving.</li>
+                <li>A/B testing framework integrated into the recommendation engine.</li>
+            </ul>
+            <p>The platform delivers personalized content experiences to millions of users while maintaining contextual relevance and continuously improving through feedback loops and model retraining cycles.</p>
+        `,
+        img: 'https://plus.unsplash.com/premium_photo-1726714601217-b9268de01ca7?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    },
 ];
 
 export default articles;

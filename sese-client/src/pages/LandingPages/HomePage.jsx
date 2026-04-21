@@ -1,4 +1,4 @@
-import Button from '../components/Button';
+import Button from '../../components/Button';
 
 const skills = ['Web Dev', 'UI/UX', 'JavaScript', 'React', 'Python'];
 
@@ -42,7 +42,7 @@ const HomePage = () => (
                         from React frontends to Python backends — and care deeply about how they look and feel.
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
-                        <Button to="/projects" variant="primary">View Projects</Button>
+                        <Button to="/articles" variant="primary">View Projects</Button>
                         <Button to="/about">About Me</Button>
                     </div>
                     <div className="mt-10 pt-6 border-t border-[#e4e4e7] flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -76,7 +76,7 @@ const HomePage = () => (
                         <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-[#71717a] mb-1">§02</p>
                         <h2 className="font-display text-3xl font-bold text-[#0a0a0a]">Featured Work</h2>
                     </div>
-                    <Button to="/projects">All Projects</Button>
+                    <Button to="/articles">All Projects</Button>
                 </div>
                 <div className="grid sm:grid-cols-2 border-2 border-[#0a0a0a] divide-x-2 divide-[#0a0a0a]">
                     {featured.map(p => (

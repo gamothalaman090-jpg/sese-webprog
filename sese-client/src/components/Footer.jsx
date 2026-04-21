@@ -3,11 +3,11 @@ import Button from './Button';
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
-    
+
     const navLinks = [
         { label: 'Home', to: '/' },
         { label: 'About', to: '/about' },
-        { label: 'Projects', to: '/projects' },
+        { label: 'Projects', to: '/articles' },
     ];
 
     const socials = [
@@ -19,7 +19,7 @@ const Footer = () => {
     return (
         <footer className="w-full bg-zinc-950 text-zinc-50 border-t-4 border-zinc-900 pt-16 pb-10 px-6 sm:px-12 lg:px-24">
             <div className="mx-auto max-w-7xl">
-                
+
                 {/* TIER 01: PRIMARY BRANDING & CTA */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 pb-12 border-b border-zinc-800">
                     <div>
@@ -27,14 +27,14 @@ const Footer = () => {
                             §01 — Direct Communications
                         </p>
                         <h2 className="font-display text-4xl sm:text-6xl font-black leading-tight mb-8">
-                            Let's build <br/>
+                            Let's build <br />
                             <span className="text-zinc-600">the next iteration.</span>
                         </h2>
                         <div className="flex flex-wrap gap-3">
-                            <Button to="mailto:ej.sese@example.com" variant="secondary" className="border-none">
+                            <Button to="mailto:ej.sese@example.com" variant="secondary" className="border-zinc-700 text-zinc-300 hover:border-zinc-500">
                                 Copy Email
                             </Button>
-                            <Button to="/projects" variant="secondary" className="border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white">
+                            <Button to="/articles" variant="secondary" className="border-zinc-700 text-zinc-300 hover:border-zinc-500">
                                 Start a Project
                             </Button>
                         </div>
@@ -73,10 +73,10 @@ const Footer = () => {
                         <ul className="flex flex-col gap-3">
                             {socials.map(social => (
                                 <li key={social.label}>
-                                    <a 
-                                        href={social.href} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
+                                    <a
+                                        href={social.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="text-xs font-semibold hover:text-zinc-400 transition-colors uppercase tracking-wider flex items-center group"
                                     >
                                         {social.label}
@@ -92,7 +92,7 @@ const Footer = () => {
                         <div className="max-w-xs lg:text-right">
                             <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500 mb-4">Technical Mandate</h4>
                             <p className="text-[10px] leading-relaxed text-zinc-400 font-medium italic opacity-70">
-                                Designed and developed by Eunich John Sese. Built with React 19, 
+                                Designed and developed by Eunich John Sese. Built with React 19,
                                 Tailwind CSS v4, and a strict adherence to Editorial Brutalism.
                             </p>
                         </div>

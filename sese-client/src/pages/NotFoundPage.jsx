@@ -23,7 +23,7 @@ const NotFoundPage = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                     <Button to="/" variant="primary" className="min-w-[200px]">Return Home</Button>
-                    <Button to="/projects" variant="secondary" className="min-w-[200px] border-zinc-700 text-zinc-300">Browse Projects</Button>
+                    <Button to="/articles" variant="secondary" className="min-w-[200px] border-zinc-700 text-zinc-300">Browse Projects</Button>
                 </div>
             </div>
 

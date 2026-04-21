@@ -1,4 +1,4 @@
-import Button from '../components/Button';
+import Button from '../../components/Button';
 
 const stats = [
     { value: '3rd', label: 'Year Standing' },
@@ -75,7 +75,7 @@ const AboutPage = () => (
                         </blockquote>
                     </div>
                     <div className="mt-8">
-                        <Button to="/projects" variant="primary">View My Projects</Button>
+                        <Button to="/articles" variant="primary">View My Projects</Button>
                     </div>
                 </div>
             </div>
