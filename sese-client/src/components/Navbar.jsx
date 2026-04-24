@@ -5,6 +5,7 @@ const links = [
     { label: 'Home', to: '/', end: true },
     { label: 'About', to: '/about' },
     { label: 'Projects', to: '/articles' },
+    { label: 'Dashboard', to: '/dashboard' },
 ];
 
 const linkClass = ({ isActive }) =>
