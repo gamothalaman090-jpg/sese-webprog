@@ -8,10 +8,8 @@ const AuthLayout = () => {
         <section className="min-h-screen bg-[#fafafa] text-[#0a0a0a]">
             <div className="grid min-h-screen w-full lg:grid-cols-[1fr_1fr]">
 
-                {/* LEFT PANEL — Branded Typographic Poster */}
                 <div className="relative hidden lg:flex flex-col justify-between bg-[#0a0a0a] text-zinc-50 border-r-2 border-[#0a0a0a] p-12 xl:p-16 overflow-hidden">
 
-                    {/* Decorative grid lines */}
                     <div className="absolute inset-0 pointer-events-none opacity-[0.04]">
                         <div className="absolute top-0 left-1/3 w-px h-full bg-zinc-50" />
                         <div className="absolute top-0 left-2/3 w-px h-full bg-zinc-50" />
@@ -19,7 +17,6 @@ const AuthLayout = () => {
                         <div className="absolute top-2/3 left-0 w-full h-px bg-zinc-50" />
                     </div>
 
-                    {/* Top: Section marker + back link */}
                     <div className="relative z-10">
                         <Link
                             to="/"
@@ -33,7 +30,6 @@ const AuthLayout = () => {
                         </p>
                     </div>
 
-                    {/* Center: Typographic lockup */}
                     <div className="relative z-10 flex-1 flex flex-col justify-center">
                         <h2 className="font-display text-7xl xl:text-8xl font-black leading-[0.95] mb-6">
                             EJ.<br />
@@ -46,7 +42,6 @@ const AuthLayout = () => {
                         </p>
                     </div>
 
-                    {/* Bottom: Metadata strip */}
                     <div className="relative z-10 flex items-end justify-between border-t border-zinc-800 pt-6">
                         <div>
                             <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">
@@ -60,11 +55,9 @@ const AuthLayout = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* RIGHT PANEL — Form Area */}
                 <main className="flex items-center bg-[#fafafa] px-6 py-12 sm:px-10 lg:px-16">
                     <div className="mx-auto w-full max-w-md">
-                        {/* Mobile-only back link */}
+                    
                         <div className="lg:hidden mb-8">
                             <Link
                                 to="/"
