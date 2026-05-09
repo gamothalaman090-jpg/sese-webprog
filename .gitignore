@@ -1,0 +1,4 @@
+sese-server/.env
+sese-server/node_modules
+sese-client/.env
+sese-client/node_modules

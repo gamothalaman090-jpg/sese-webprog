@@ -1,8 +1,22 @@
 import Button from '../../components/Button';
 import ArticleList from '../../components/ArticleList';
-import articles from '../../assets/article-content.js';
+import { fetchArticles } from '../../services/ArticleService';
+import { useState, useEffect } from 'react';
 
 const ArticleListPage = () => {
+    const [articles, setArticles] = useState([]);
+
+    useEffect(() => {
+        const loadArticles = async () => {
+            try {
+                const { data } = await fetchArticles();
+                setArticles(data.articles || []);
+            } catch (error) {
+                console.error("Error fetching articles:", error);
+            }
+        };
+        loadArticles();
+    }, []);
     return (
         <div className="flex w-full flex-col gap-12 bg-zinc-50 min-h-screen">
             {/* HER0 SECTION */}

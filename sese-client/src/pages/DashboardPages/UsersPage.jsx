@@ -1,561 +1,363 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    FormControlLabel,
-    IconButton,
-    InputAdornment,
-    MenuItem,
-    Stack,
-    Switch,
-    TextField,
-    Typography,
-    Divider,
-    Card,
-    CardContent,
-    useMediaQuery
+  Box, Button, Modal, Stack, Typography,
+  FormControl, TextField, InputLabel, Select, MenuItem,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { DataGrid, GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid';
-import { UserPlus, Download, Search, ShieldCheck, Eye, EyeOff } from 'lucide-react';
-import usersSeedRaw from '../../assets/users.json?raw';
+import { UserPlus, User, ChevronDown, X, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
+import { fetchUsers, createUser, updateUser } from '../../services/UserService';
+import { useNavigate } from 'react-router-dom';
 
-const roles = ['admin', 'editor', 'viewer'];
-const genders = ['male', 'female', 'other'];
+// ─── Design: Editorial Brutalism ─────────────────────────────────────
+// Table reads like a structured journal register — no MUI DataGrid chrome,
+// pure typographic hierarchy with role badges and binary status toggles.
 
-const blankForm = {
-    firstName: '',
-    lastName: '',
-    age: '',
-    gender: '',
-    contactNumber: '',
-    email: '',
-    role: 'editor',
-    username: '',
-    password: '',
-    address: '',
-    isActive: true,
+const modalStyle = {
+  position: 'absolute', top: '50%', left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: { xs: '90%', sm: 640 },
+  bgcolor: '#fafafa',
+  border: '2px solid #0a0a0a',
+  boxShadow: '8px 8px 0px #0a0a0a',
+  p: 4,
 };
 
-const labelize = (value) => value ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : '';
-
-const loadUsers = () => {
-    try {
-        const parsed = JSON.parse(usersSeedRaw);
-        return parsed.map((user, index) => ({
-            id: index + 1,
-            firstName: String(user.firstName ?? '').trim(),
-            lastName: String(user.lastName ?? '').trim(),
-            age: String(user.age ?? '').trim(),
-            gender: genders.includes(String(user.gender ?? '').trim().toLowerCase())
-                ? String(user.gender ?? '').trim().toLowerCase()
-                : '',
-            contactNumber: String(user.contactNumber ?? '').trim(),
-            email: String(user.email ?? '').trim().toLowerCase(),
-            role: roles.includes(String(user.role ?? '').trim().toLowerCase())
-                ? String(user.role ?? '').trim().toLowerCase()
-                : 'editor',
-            username: String(user.username ?? '').trim().toLowerCase(),
-            password: String(user.password ?? ''),
-            address: String(user.address ?? '').trim(),
-            isActive: typeof user.isActive === 'boolean' ? user.isActive : true,
-        }));
-    } catch {
-        return [];
-    }
+const roleBadge = {
+  admin:  { bg: '#0a0a0a', text: '#fff',     label: 'Admin' },
+  editor: { bg: '#3f3f46', text: '#fff',     label: 'Editor' },
+  viewer: { bg: '#e4e4e7', text: '#3f3f46',  label: 'Viewer' },
 };
 
-const initialUsers = loadUsers();
+const RoleBadge = ({ type }) => {
+  const s = roleBadge[type] || roleBadge.viewer;
+  return (
+    <span style={{
+      backgroundColor: s.bg, color: s.text,
+      fontSize: '9px', fontWeight: 800,
+      letterSpacing: '0.25em', textTransform: 'uppercase',
+      padding: '2px 8px', display: 'inline-block',
+    }}>
+      {s.label}
+    </span>
+  );
+};
+
+const StatusDot = ({ active }) => (
+  <span style={{
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em',
+    textTransform: 'uppercase',
+    color: active ? '#16a34a' : '#dc2626',
+  }}>
+    <span style={{
+      width: 7, height: 7, borderRadius: '50%',
+      backgroundColor: active ? '#16a34a' : '#dc2626',
+      display: 'inline-block',
+    }} />
+    {active ? 'Active' : 'Inactive'}
+  </span>
+);
 
 const UsersPage = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [users, setUsers] = useState(initialUsers);
-    const [modal, setModal] = useState({ open: false, id: null });
-    const [form, setForm] = useState(blankForm);
-    const [errors, setErrors] = useState({});
-    const [showPassword, setShowPassword] = useState(false);
+  const [open, setOpen]           = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editUserId, setEditUserId] = useState(null);
+  const [users, setUsers]         = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const navigate = useNavigate();
 
-    // Search & Filter State
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterRole, setFilterRole] = useState('all');
-    const [filterGender, setFilterGender] = useState('all');
-    const [filterStatus, setFilterStatus] = useState('active');
+  const emptyUser = {
+    firstName: '', lastName: '', age: '', gender: '',
+    contactNumber: '', email: '', username: '', password: '',
+    address: '', type: 'editor', isActive: true,
+  };
+  const [newUser, setNewUser] = useState(emptyUser);
 
-    const resetForm = () => {
-        setForm({ ...blankForm });
-        setErrors({});
-    };
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const { data } = await fetchUsers();
+      setUsers(data.users || []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
 
-    const openModal = (user = null) => {
-        setModal({ open: true, id: user?.id ?? null });
-        setForm(user ? { ...blankForm, ...user } : { ...blankForm });
-        setErrors({});
-    };
+  useEffect(() => {
+    if (localStorage.getItem('type') === 'editor') navigate('/dashboard');
+    else loadUsers();
+  }, [navigate]);
 
-    const closeModal = () => {
-        setModal({ open: false, id: null });
-        setShowPassword(false);
-        resetForm();
-    };
+  const handleOpen = () => { setIsEditing(false); setNewUser(emptyUser); setOpen(true); };
+  const handleClose = () => { setOpen(false); setIsEditing(false); setEditUserId(null); };
 
-    const handleChange = ({ target: { name, value, checked, type } }) => {
-        setForm((prev) => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value,
-        }));
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: '' }));
-        }
-    };
+  const handleEdit = (id) => {
+    const u = users.find(u => u._id === id);
+    if (u) { setNewUser({ ...u, password: '' }); setEditUserId(id); setIsEditing(true); setOpen(true); }
+  };
 
-    const validate = () => {
-        const nextErrors = {};
-        const email = form.email.trim().toLowerCase();
-        const username = form.username.trim().toLowerCase();
+  const handleSaveUser = async () => {
+    try {
+      if (isEditing) {
+        const payload = { ...newUser };
+        if (!payload.password) delete payload.password;
+        await updateUser(editUserId, payload);
+      } else {
+        await createUser(newUser);
+      }
+      loadUsers(); handleClose();
+    } catch (e) { console.error(e); }
+  };
 
-        [
-            ['firstName', 'First name'],
-            ['lastName', 'Last name'],
-            ['age', 'Age'],
-            ['gender', 'Gender'],
-            ['contactNumber', 'Contact number'],
-            ['email', 'Email'],
-            ['role', 'Role'],
-            ['username', 'Username'],
-            ['password', 'Password'],
-            ['address', 'Address'],
-        ].forEach(([key, label]) => {
-            if (!String(form[key]).trim()) {
-                nextErrors[key] = `${label} is required.`;
-            }
-        });
+  const handleToggleActive = async (id, isActive) => {
+    try { await updateUser(id, { isActive: !isActive }); loadUsers(); }
+    catch (e) { console.error(e); }
+  };
 
-        if (!nextErrors.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            nextErrors.email = 'Enter a valid email address.';
-        }
-        if (!nextErrors.email && users.some((user) => user.id !== modal.id && user.email === email)) {
-            nextErrors.email = 'Email address already exists.';
-        }
+  const field = (key) => ({
+    value: newUser[key],
+    onChange: (e) => setNewUser({ ...newUser, [key]: e.target.value }),
+  });
 
-        // Beginner-friendly validations as requested
-        if (!nextErrors.username && /\s/.test(form.username)) {
-            nextErrors.username = 'Username must not contain spaces.';
-        }
-        if (!nextErrors.username && users.some((user) => user.id !== modal.id && user.username === username)) {
-            nextErrors.username = 'Username already exists.';
-        }
+  return (
+    <>
+      {/* ── Page Header ───────────────────────────────────────────── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+        <div>
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#71717a', marginBottom: 6 }}>
+            §03 — Registry
+          </p>
+          <h1 style={{ fontSize: 42, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1, color: '#0a0a0a', margin: 0 }}>
+            Users
+          </h1>
+        </div>
+        <button
+          onClick={handleOpen}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            backgroundColor: '#0a0a0a', color: '#fff',
+            border: 'none', padding: '10px 20px',
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.3em',
+            textTransform: 'uppercase', cursor: 'pointer',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#3f3f46'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#0a0a0a'}
+        >
+          <UserPlus size={15} />
+          Add User
+        </button>
+      </div>
 
-        if (!nextErrors.password && form.password.length < 8) {
-            nextErrors.password = 'Password must be at least 8 characters long.';
-        }
+      {/* ── Table ─────────────────────────────────────────────────── */}
+      <div style={{ border: '2px solid #0a0a0a', overflow: 'hidden' }}>
+        {/* Header row */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 2fr 1fr 1fr 1fr 1.5fr 1fr 1.5fr',
+          backgroundColor: '#0a0a0a',
+          padding: '10px 20px',
+        }}>
+          {['Name', 'Age', 'Gender', 'Email', 'Role', 'Status', 'Contact', 'Address', 'Password', 'Actions'].map(h => (
+            <span key={h} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#9a9a9a' }}>
+              {h}
+            </span>
+          ))}
+        </div>
 
-        if (!nextErrors.contactNumber && !/^\d{11}$/.test(form.contactNumber)) {
-            nextErrors.contactNumber = 'Contact number must be exactly 11 digits.';
-        }
-
-        if (!nextErrors.age && !/^\d+$/.test(form.age)) {
-            nextErrors.age = 'Age must be a valid number.';
-        }
-
-        return nextErrors;
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const validationErrors = validate();
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
-
-        const formattedForm = {
-            ...form,
-            firstName: form.firstName.trim(),
-            lastName: form.lastName.trim(),
-            age: form.age.trim(),
-            contactNumber: form.contactNumber.trim(),
-            email: form.email.trim().toLowerCase(),
-            username: form.username.trim().toLowerCase(),
-            address: form.address.trim(),
-        };
-
-        setUsers((prev) =>
-            modal.id
-                ? prev.map((user) => (user.id === modal.id ? { ...user, ...formattedForm } : user))
-                : [
-                    ...prev,
-                    {
-                        ...formattedForm,
-                        id: prev.reduce((max, user) => Math.max(max, Number(user.id) || 0), 0) + 1,
-                    }
-                ]
-        );
-        closeModal();
-    };
-
-    const toggleStatus = (id) => {
-        setUsers((prev) =>
-            prev.map((user) => (user.id === id ? { ...user, isActive: !user.isActive } : user))
-        );
-    };
-
-    const fieldProps = (name, label, extra = {}) => ({
-        name,
-        label,
-        value: form[name],
-        onChange: handleChange,
-        error: Boolean(errors[name]),
-        helperText: errors[name],
-        fullWidth: true,
-        size: "small",
-        InputLabelProps: {
-            sx: { fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }
-        },
-        ...extra,
-    });
-
-    const columns = [
-        { field: 'id', headerName: 'ID', width: 80, align: 'center', headerAlign: 'center' },
-        {
-            field: 'fullName',
-            headerName: 'Full Name',
-            flex: 1,
-            minWidth: 160,
-            valueGetter: (_, row) => `${row.firstName} ${row.lastName}`.trim(),
-        },
-        { field: 'username', headerName: 'Username', minWidth: 130 },
-        { field: 'age', headerName: 'Age', width: 70 },
-        {
-            field: 'gender',
-            headerName: 'Gender',
-            width: 110,
-            valueGetter: (_, row) => labelize(row.gender),
-        },
-        { field: 'contactNumber', headerName: 'Contact Number', minWidth: 150 },
-        { field: 'email', headerName: 'Email', flex: 1.1, minWidth: 200 },
-        {
-            field: 'role',
-            headerName: 'Role',
-            width: 120,
-            valueGetter: (_, row) => labelize(row.role),
-            renderCell: (params) => (
-                <Box sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    bgcolor: '#fafafa',
-                    border: '1px solid #000',
-                    px: 1.5,
-                    py: 0.5,
-                    height: 28,
-                }}>
-                    <ShieldCheck size={14} color={params.row.role === 'admin' ? '#0047FF' : '#71717a'} strokeWidth={3} />
-                    <Typography variant="body2" sx={{ fontWeight: 900, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                        {params.value}
-                    </Typography>
-                </Box>
-            )
-        },
-        {
-            field: 'isActive',
-            headerName: 'Status',
-            width: 120,
-            renderCell: ({ row }) => (
-                <Chip
-                    size="small"
-                    label={row.isActive ? 'Active' : 'Inactive'}
-                    sx={{
-                        borderRadius: 0,
-                        fontWeight: 800,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        fontSize: '0.65rem',
-                        bgcolor: row.isActive ? '#0047FF' : '#f4f4f5',
-                        color: row.isActive ? 'white' : '#71717a',
-                        border: '1px solid',
-                        borderColor: row.isActive ? '#0047FF' : '#d4d4d8'
-                    }}
-                />
-            ),
-        },
-        {
-            field: 'actions',
-            headerName: 'Actions',
-            width: 250,
-            sortable: false,
-            filterable: false,
-            renderCell: ({ row }) => (
-                <Stack direction="row" spacing={2} sx={{ py: 0.5, pr: 2 }}>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => openModal(row)}
-                        sx={{ borderRadius: 0, fontWeight: 800, borderColor: '#0a0a0a', color: '#0a0a0a', px: 2, '&:hover': { bgcolor: '#f4f4f5', borderColor: '#0a0a0a' } }}
-                    >
-                        EDIT
-                    </Button>
-                    <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => toggleStatus(row.id)}
-                        sx={{
-                            borderRadius: 0,
-                            fontWeight: 800,
-                            bgcolor: row.isActive ? '#0a0a0a' : '#ef4444',
-                            color: 'white',
-                            px: 2,
-                            '&:hover': { bgcolor: row.isActive ? '#27272a' : '#dc2626' },
-                            boxShadow: 'none'
-                        }}
-                    >
-                        {row.isActive ? 'ENABLE' : 'DISABLE'}
-                    </Button>
-                </Stack>
-            ),
-        },
-    ];
-
-    const filteredUsers = useMemo(() => {
-        return users.filter(user => {
-            // Search text
-            const textMatches = searchTerm === '' || [user.firstName, user.lastName, user.email, user.username]
-                .some(field => field.toLowerCase().includes(searchTerm.toLowerCase()));
-
-            // Filters
-            const roleMatches = filterRole === 'all' || user.role === filterRole;
-            const genderMatches = filterGender === 'all' || user.gender === filterGender;
-            const statusMatches = filterStatus === 'all' || (filterStatus === 'active' ? user.isActive : !user.isActive);
-
-            return textMatches && roleMatches && genderMatches && statusMatches;
-        });
-    }, [users, searchTerm, filterRole, filterGender, filterStatus]);
-
-    function CustomToolbar() {
-        return (
-            <GridToolbarContainer sx={{ p: 2, borderBottom: '1px solid #e4e4e7', display: 'flex', justifyContent: 'flex-end' }}>
-                <GridToolbarExport
-                    printOptions={{ disableToolbarButton: true }}
-                    sx={{
-                        color: '#000',
-                        fontWeight: 800,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        fontSize: '0.75rem'
-                    }}
-                />
-            </GridToolbarContainer>
-        );
-    }
-
-    return (
-        <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
-            {/* Header */}
-            <Box sx={{ mb: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 4 }}>
-                <Box>
-                    <Typography variant="h2" sx={{ mb: 1, fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>User.Registry</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Divider sx={{ width: 60, height: 4, bgcolor: '#0047FF', border: 'none' }} />
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                            Access Management / Authentication Nodes
-                        </Typography>
-                    </Box>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button
-                        variant="contained"
-                        startIcon={<UserPlus size={16} />}
-                        onClick={() => openModal()}
-                        sx={{ bgcolor: 'black', color: 'white', borderRadius: 0, px: 3, fontWeight: 800 }}
-                    >
-                        New Entry
-                    </Button>
-                </Box>
-            </Box>
-
-            {/* Search and Filters */}
-            <Card sx={{ border: '2px solid #000', borderRadius: 0, mb: 4, boxShadow: 'none' }}>
-                <CardContent sx={{ p: 3 }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-                        <TextField
-                            placeholder="Search by Name, Email, or Username..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            fullWidth
-                            size="small"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Search size={18} color="#71717a" />
-                                    </InputAdornment>
-                                ),
-                                sx: { borderRadius: 0, '& fieldset': { borderColor: '#d4d4d8' } }
-                            }}
-                        />
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ minWidth: { md: 450 } }}>
-                            <TextField
-                                select
-                                label="Role"
-                                value={filterRole}
-                                onChange={(e) => setFilterRole(e.target.value)}
-                                size="small"
-                                fullWidth
-                                InputProps={{ sx: { borderRadius: 0 } }}
-                            >
-                                <MenuItem value="all">All Roles</MenuItem>
-                                {roles.map(r => <MenuItem key={r} value={r}>{labelize(r)}</MenuItem>)}
-                            </TextField>
-                            <TextField
-                                select
-                                label="Gender"
-                                value={filterGender}
-                                onChange={(e) => setFilterGender(e.target.value)}
-                                size="small"
-                                fullWidth
-                                InputProps={{ sx: { borderRadius: 0 } }}
-                            >
-                                <MenuItem value="all">All Genders</MenuItem>
-                                {genders.map(g => <MenuItem key={g} value={g}>{labelize(g)}</MenuItem>)}
-                            </TextField>
-                            <TextField
-                                select
-                                label="Status"
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                size="small"
-                                fullWidth
-                                InputProps={{ sx: { borderRadius: 0 } }}
-                            >
-                                <MenuItem value="all">All Status</MenuItem>
-                                <MenuItem value="active">Active</MenuItem>
-                                <MenuItem value="inactive">Inactive</MenuItem>
-                            </TextField>
-                        </Stack>
-                    </Stack>
-                </CardContent>
-            </Card>
-
-            {/* Table Container */}
-            <Card sx={{ border: '2px solid #000', borderRadius: 0, boxShadow: 'none' }}>
-                <Box sx={{ height: 650, width: '100%', bgcolor: 'white' }}>
-                    <DataGrid
-                        rows={filteredUsers}
-                        columns={columns}
-                        slots={{ toolbar: CustomToolbar }}
-                        disableRowSelectionOnClick
-                        rowHeight={64}
-                        sx={{
-                            border: 'none',
-                            '& .MuiDataGrid-columnHeader': {
-                                bgcolor: '#fafafa',
-                                borderBottom: '3px solid #000',
-                                textTransform: 'uppercase',
-                                fontSize: '0.7rem',
-                                fontWeight: 950,
-                                letterSpacing: '0.15rem',
-                                color: '#000',
-                            },
-                            '& .MuiDataGrid-cell': {
-                                borderColor: '#f4f4f5',
-                                fontSize: '0.85rem',
-                                color: '#27272a',
-                                fontWeight: 600,
-                                display: 'flex',
-                                alignItems: 'center',
-                            },
-                        }}
-                    />
-                </Box>
-            </Card>
-
-            {/* User Form Modal */}
-            <Dialog
-                open={modal.open}
-                onClose={closeModal}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{
-                    sx: { borderRadius: 0, border: '2px solid #000', boxShadow: '8px 8px 0px rgba(0,0,0,1)' }
+        {/* Body */}
+        {loading ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#71717a', fontSize: 12, letterSpacing: '0.2em', fontWeight: 600, textTransform: 'uppercase' }}>
+            Loading registry…
+          </div>
+        ) : users.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#71717a', fontSize: 12, letterSpacing: '0.2em', fontWeight: 600, textTransform: 'uppercase' }}>
+            No records found.
+          </div>
+        ) : users.map((u, i) => (
+          <div
+            key={u._id}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr 1fr 2fr 1fr 1fr 1fr 1.5fr 1fr 1.5fr',
+              padding: '14px 20px',
+              borderTop: '1px solid #e4e4e7',
+              alignItems: 'center',
+              backgroundColor: i % 2 === 0 ? '#fff' : '#fafafa',
+              transition: 'background 0.1s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f4f4f5'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = i % 2 === 0 ? '#fff' : '#fafafa'}
+          >
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a' }}>
+              {u.firstName} {u.lastName}
+            </span>
+            <span style={{ fontSize: 12, color: '#52525b' }}>{u.age}</span>
+            <span style={{ fontSize: 12, color: '#52525b', textTransform: 'capitalize' }}>{u.gender}</span>
+            <span style={{ fontSize: 11, color: '#52525b', wordBreak: 'break-all' }}>{u.email}</span>
+            <span><RoleBadge type={u.type} /></span>
+            <span><StatusDot active={u.isActive} /></span>
+            <span style={{ fontSize: 11, color: '#52525b' }}>{u.contactNumber}</span>
+            <span style={{ fontSize: 11, color: '#52525b' }}>{u.address || '—'}</span>
+            {/* Password column — masked for security */}
+            <span style={{ fontSize: 13, color: '#a1a1aa', letterSpacing: '0.1em' }}>••••••••</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                onClick={() => handleEdit(u._id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  backgroundColor: 'transparent', border: '1.5px solid #0a0a0a',
+                  padding: '4px 12px', fontSize: 9, fontWeight: 800,
+                  letterSpacing: '0.25em', textTransform: 'uppercase', cursor: 'pointer',
+                  color: '#0a0a0a', transition: 'all 0.15s',
                 }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#0a0a0a'; e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#0a0a0a'; }}
+              >
+                <Pencil size={11} /> Edit
+              </button>
+              <button
+                onClick={() => handleToggleActive(u._id, u.isActive)}
+                title={u.isActive ? 'Deactivate' : 'Activate'}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: u.isActive ? '#16a34a' : '#dc2626',
+                  display: 'flex', alignItems: 'center',
+                }}
+              >
+                {u.isActive ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Row count ─────────────────────────────────────────────── */}
+      <div style={{ padding: '10px 0', display: 'flex', justifyContent: 'flex-end' }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: '#9a9a9a' }}>
+          {users.length} record{users.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* ── Add / Edit Modal ──────────────────────────────────────── */}
+      <Modal keepMounted open={open} onClose={handleClose}>
+        <Box sx={modalStyle}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.02em', color: '#0a0a0a' }}>
+              {isEditing ? 'Edit Record' : 'New Record'}
+            </Typography>
+            <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#71717a' }}>
+              <X size={20} />
+            </button>
+          </Stack>
+
+          {/* Label style */}
+          {[
+            { label: 'First Name',   key: 'firstName' },
+            { label: 'Last Name',    key: 'lastName' },
+            { label: 'Age',          key: 'age',           inputMode: 'numeric', pattern: '[0-9]*' },
+            { label: 'Contact',      key: 'contactNumber', inputMode: 'tel',     pattern: '[0-9+]*' },
+            { label: 'Email',        key: 'email' },
+            { label: 'Username',     key: 'username' },
+            { label: 'Address',      key: 'address' },
+          ].map(({ label, key, inputMode = 'text', pattern }) => (
+            <Box key={key} sx={{ mb: 2 }}>
+              <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#71717a', display: 'block', marginBottom: 4 }}>
+                {label}
+              </label>
+              <input
+                value={newUser[key]}
+                inputMode={inputMode}
+                pattern={pattern}
+                onChange={(e) => {
+                  // Strip non-numeric chars for tel/numeric fields
+                  const val = (inputMode === 'tel' || inputMode === 'numeric')
+                    ? e.target.value.replace(/[^0-9+]/g, '')
+                    : e.target.value;
+                  setNewUser({ ...newUser, [key]: val });
+                }}
+                style={{
+                  width: '100%', padding: '8px 12px',
+                  border: '1.5px solid #d4d4d8', background: '#fff',
+                  fontSize: 13, color: '#0a0a0a',
+                  outline: 'none', boxSizing: 'border-box',
+                  fontFamily: 'inherit',
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#0a0a0a'}
+                onBlur={e => e.target.style.borderColor = '#d4d4d8'}
+              />
+            </Box>
+          ))}
+
+          <Box sx={{ mb: 2 }}>
+            <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#71717a', display: 'block', marginBottom: 4 }}>
+              Password {isEditing && <span style={{ fontWeight: 600, letterSpacing: '0.1em', textTransform: 'none', fontSize: 9 }}>(leave blank to keep)</span>}
+            </label>
+            <input
+              type="password"
+              value={newUser.password}
+              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              style={{
+                width: '100%', padding: '8px 12px',
+                border: '1.5px solid #d4d4d8', background: '#fff',
+                fontSize: 13, color: '#0a0a0a',
+                outline: 'none', boxSizing: 'border-box',
+                fontFamily: 'inherit',
+              }}
+              onFocus={e => e.target.style.borderColor = '#0a0a0a'}
+              onBlur={e => e.target.style.borderColor = '#d4d4d8'}
+            />
+          </Box>
+
+          <Stack direction="row" gap={2} sx={{ mb: 2 }}>
+            {/* Gender */}
+            <Box sx={{ flex: 1 }}>
+              <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#71717a', display: 'block', marginBottom: 4 }}>Gender</label>
+              <select
+                value={newUser.gender}
+                onChange={(e) => setNewUser({ ...newUser, gender: e.target.value })}
+                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #d4d4d8', background: '#fff', fontSize: 13, color: '#0a0a0a', outline: 'none', fontFamily: 'inherit' }}
+              >
+                <option value="">— Select —</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </Box>
+            {/* Role */}
+            <Box sx={{ flex: 1 }}>
+              <label style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#71717a', display: 'block', marginBottom: 4 }}>Role</label>
+              <select
+                value={newUser.type || 'editor'}
+                onChange={(e) => setNewUser({ ...newUser, type: e.target.value })}
+                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #d4d4d8', background: '#fff', fontSize: 13, color: '#0a0a0a', outline: 'none', fontFamily: 'inherit' }}
+              >
+                <option value="admin">Admin</option>
+                <option value="editor">Editor</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </Box>
+          </Stack>
+
+          <Stack direction="row" gap={2} sx={{ mt: 3 }}>
+            <button
+              onClick={handleClose}
+              style={{ flex: 1, padding: '10px', border: '1.5px solid #0a0a0a', background: 'transparent', fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', cursor: 'pointer', color: '#0a0a0a' }}
             >
-                <DialogTitle sx={{ borderBottom: '2px solid #000', pb: 2, mb: 2 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {modal.id ? 'EDIT_USER_PROFILE' : 'CREATE_NEW_USER'}
-                    </Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <Box component="form" id="user-form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-                        <Stack spacing={3}>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                <TextField {...fieldProps('firstName', 'First Name')} />
-                                <TextField {...fieldProps('lastName', 'Last Name')} />
-                            </Stack>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                <TextField {...fieldProps('username', 'Username')} />
-                                <TextField
-                                    {...fieldProps('password', 'Password')}
-                                    type={showPassword ? 'text' : 'password'}
-                                    InputProps={{
-                                        endAdornment: (
-                                            <InputAdornment position="end">
-                                                <IconButton
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    edge="end"
-                                                >
-                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </IconButton>
-                                            </InputAdornment>
-                                        )
-                                    }}
-                                />
-                            </Stack>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                <TextField {...fieldProps('email', 'Email Address')} type="email" />
-                                <TextField {...fieldProps('contactNumber', 'Contact Number')} />
-                            </Stack>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                <TextField {...fieldProps('age', 'Age')} type="number" sx={{ flex: 1 }} />
-                                <TextField select {...fieldProps('gender', 'Gender')} sx={{ flex: 2 }}>
-                                    <MenuItem value="" disabled>Select Gender</MenuItem>
-                                    {genders.map(g => <MenuItem key={g} value={g}>{labelize(g)}</MenuItem>)}
-                                </TextField>
-                                <TextField select {...fieldProps('role', 'System Role')} sx={{ flex: 2 }}>
-                                    {roles.map(r => <MenuItem key={r} value={r}>{labelize(r)}</MenuItem>)}
-                                </TextField>
-                            </Stack>
-                            <TextField {...fieldProps('address', 'Full Address')} multiline rows={2} />
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={form.isActive}
-                                        onChange={handleChange}
-                                        name="isActive"
-                                        color="primary"
-                                    />
-                                }
-                                label={<Typography sx={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase' }}>Active Account Status</Typography>}
-                                sx={{ m: 0 }}
-                            />
-                        </Stack>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: 3, borderTop: '2px solid #000' }}>
-                    <Button onClick={closeModal} variant="outlined" sx={{ borderRadius: 0, fontWeight: 700, color: '#000', borderColor: '#000', px: 3 }}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" form="user-form" variant="contained" sx={{ borderRadius: 0, fontWeight: 800, bgcolor: '#0a0a0a', px: 4 }}>
-                        {modal.id ? 'Save Changes' : 'Create User'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveUser}
+              style={{ flex: 1, padding: '10px', border: '1.5px solid #0a0a0a', background: '#0a0a0a', color: '#fff', fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#3f3f46'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = '#0a0a0a'}
+            >
+              {isEditing ? 'Save Changes' : 'Add Record'}
+            </button>
+          </Stack>
         </Box>
-    );
+      </Modal>
+    </>
+  );
 };
 
 export default UsersPage;

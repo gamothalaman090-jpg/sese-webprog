@@ -19,7 +19,8 @@ import {
     Search as SearchIcon, 
     LogOut,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Newspaper
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import InputBase from "@mui/material/InputBase";
@@ -44,10 +45,17 @@ const dashboardNavItems = [
         icon: FileText,
     },
     {
+        label: "Articles",
+        title: "Article Management",
+        to: "/dashboard/articles",
+        icon: Newspaper,
+    },
+    {
         label: "Users",
         title: "User Management",
         to: "/dashboard/users",
         icon: Users,
+        adminOnly: true, // Mark this for filtering
     },
 ];
 
@@ -133,7 +141,25 @@ const DashLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const currentItem = dashboardNavItems.find(item => item.to === location.pathname) || dashboardNavItems[0];
+    const userType  = localStorage.getItem('type');
+    const firstName  = localStorage.getItem('firstName');
+
+    // Route guard: viewers cannot access the dashboard
+    React.useEffect(() => {
+        if (!localStorage.getItem('token')) {
+            navigate('/auth/signin');
+        } else if (userType === 'viewer') {
+            navigate('/');
+        }
+    }, [userType, navigate]);
+
+    const filteredNavItems = dashboardNavItems.filter(item => {
+        if (item.adminOnly && userType === 'editor') return false;
+        return true;
+    });
+
+
+    const currentItem = filteredNavItems.find(item => item.to === location.pathname) || filteredNavItems[0];
 
     const toggleDrawer = () => setOpen(!open);
     const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
@@ -159,7 +185,7 @@ const DashLayout = () => {
             </Box>
             <Divider sx={{ mx: 2, borderColor: 'rgba(0,0,0,0.1)' }} />
             <List sx={{ px: 2, py: 4 }}>
-                {dashboardNavItems.map(({ label, to, icon: Icon }) => {
+                {filteredNavItems.map(({ label, to, icon: Icon }) => {
                     const isActive = to === "/dashboard" 
                         ? location.pathname === "/dashboard" || location.pathname === "/dashboard/"
                         : location.pathname.startsWith(to);
@@ -287,7 +313,7 @@ const DashLayout = () => {
                                 {currentItem.title}
                             </Typography>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Search>
                                 <SearchIconWrapper>
                                     <SearchIcon size={18} color="#71717a" />
@@ -297,6 +323,22 @@ const DashLayout = () => {
                                     inputProps={{ "aria-label": "search" }}
                                 />
                             </Search>
+                            {/* User identity chip */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pl: 1, borderLeft: '1px solid rgba(0,0,0,0.12)' }}>
+                                <Box sx={{ textAlign: 'right' }}>
+                                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#0a0a0a', letterSpacing: '0.05em', lineHeight: 1.2, textTransform: 'uppercase' }}>
+                                        {firstName || 'User'}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: '#71717a', letterSpacing: '0.15em', textTransform: 'uppercase', lineHeight: 1 }}>
+                                        {userType}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ width: 32, height: 32, bgcolor: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <Typography sx={{ color: 'white', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '0.05em' }}>
+                                        {firstName ? firstName[0].toUpperCase() : 'U'}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </Box>
                     </Toolbar>
                 </MuiAppBar>

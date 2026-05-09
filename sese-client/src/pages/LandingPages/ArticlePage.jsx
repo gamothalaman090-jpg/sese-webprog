@@ -1,13 +1,43 @@
-import { useParams, Navigate } from 'react-router-dom';
-import articles from '../../assets/article-content.js';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { fetchArticle } from '../../services/ArticleService';
 import Button from '../../components/Button';
 
 const ArticlePage = () => {
     const { id } = useParams();
-    const project = articles.find((a) => a.id === id);
+    const navigate = useNavigate();
+    const [project, setProject] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
-    if (!project) {
+    useEffect(() => {
+        fetchArticle(id)
+            .then(({ data }) => {
+                setProject(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Failed to fetch article", err);
+                setError(true);
+                setLoading(false);
+            });
+    }, [id]);
+
+    if (error) {
         return <Navigate to="/articles" />;
+    }
+
+    if (loading || !project) {
+        return (
+            <div className="flex w-full flex-col bg-zinc-50 min-h-screen pt-24 px-6 sm:px-12 lg:px-24">
+                <div className="max-w-6xl w-full animate-pulse">
+                    <div className="h-8 w-32 bg-zinc-200 mb-12" />
+                    <div className="h-4 w-48 bg-zinc-200 mb-6" />
+                    <div className="h-20 w-3/4 bg-zinc-300 mb-10" />
+                    <div className="h-96 w-full bg-zinc-200 mt-16" />
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -65,7 +95,7 @@ const ArticlePage = () => {
                             prose-h3:font-display prose-h3:text-3xl prose-h3:font-black prose-h3:mt-12 
                             prose-p:text-zinc-600 prose-p:leading-relaxed prose-p:mb-6
                             prose-strong:text-zinc-900 prose-li:text-zinc-600"
-                            dangerouslySetInnerHTML={{ __html: project.content }}
+                            dangerouslySetInnerHTML={{ __html: project.content || '<p>No content provided for this project.</p>' }}
                         />
                     </div>
 

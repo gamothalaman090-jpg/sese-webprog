@@ -1,10 +1,53 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import { useState } from "react";
+import { createUser } from "../../services/UserService";
 
 const inputClasses =
     "mt-1.5 w-full border-2 border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-[#0a0a0a] outline-none transition placeholder:text-zinc-400 focus:border-[#0a0a0a] focus:bg-white";
 
 const SignUpPage = () => {
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+
+    const handleSignUp = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        if (!firstName || !lastName || !email || !password) {
+            return setError("All fields are required.");
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return setError("Please enter a valid email address.");
+        }
+
+        if (password.length < 8) {
+            return setError("Password must be at least 8 characters long.");
+        }
+
+        try {
+            // Default new sign-ups to "editor" role
+            await createUser({
+                firstName,
+                lastName,
+                email,
+                password,
+                type: "editor",
+                isActive: true
+            });
+            // On success, redirect to login page
+            navigate("/auth/signin");
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to create account.");
+        }
+    };
+
     return (
         <>
             {/* Section marker */}
@@ -20,10 +63,16 @@ const SignUpPage = () => {
                 Join the archive. Set up your credentials and start exploring the full collection.
             </p>
 
+            {error && (
+                <div className="mt-4 p-3 bg-red-100 text-red-700 text-sm border-l-4 border-red-500">
+                    {error}
+                </div>
+            )}
+
             {/* Divider */}
             <div className="w-8 h-0.5 bg-[#0a0a0a] mt-6 mb-8" />
 
-            <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-5" onSubmit={handleSignUp}>
                 {/* Name Grid */}
                 <div className="grid gap-5 sm:grid-cols-2">
                     <div>
@@ -36,6 +85,9 @@ const SignUpPage = () => {
                             placeholder="Eunich"
                             autoComplete="given-name"
                             className={inputClasses}
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            required
                         />
                     </div>
                     <div>
@@ -48,6 +100,9 @@ const SignUpPage = () => {
                             placeholder="Sese"
                             autoComplete="family-name"
                             className={inputClasses}
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required
                         />
                     </div>
                 </div>
@@ -63,6 +118,9 @@ const SignUpPage = () => {
                         placeholder="you@example.com"
                         autoComplete="email"
                         className={inputClasses}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
                     />
                 </div>
 
@@ -77,6 +135,10 @@ const SignUpPage = () => {
                         placeholder="••••••••"
                         autoComplete="new-password"
                         className={inputClasses}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={8}
                     />
                     <p className="mt-1.5 text-[10px] leading-5 text-zinc-400">
                         Minimum 8 characters — letters, numbers, and symbols.

@@ -14,6 +14,7 @@ import DashLayout from './layouts/DashLayout';
 import DashboardPage from './pages/DashboardPages/DashboardPage';
 import ReportsPage from './pages/DashboardPages/ReportsPage';
 import UsersPage from './pages/DashboardPages/UsersPage';
+import DashArticleListPage from './pages/DashboardPages/DashArticleListPage';
 
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -36,7 +37,7 @@ const routes = [
         element: <ArticleListPage />,
       },
       {
-        path: 'articles/:name',
+        path: 'articles/:id',
         element: <ArticlePage />,
       },
     ],
@@ -72,6 +73,10 @@ const routes = [
       {
         path: "users",
         element: <UsersPage />,
+      },
+      {
+        path: "articles",
+        element: <DashArticleListPage />,
       },
     ],
   },

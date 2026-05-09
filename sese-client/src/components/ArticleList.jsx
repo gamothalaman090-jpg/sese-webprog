@@ -5,8 +5,8 @@ const ArticleList = ({ articles }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border-2 border-zinc-900 bg-zinc-900 gap-[2px]">
             {articles.map((project) => (
                 <Link
-                    key={project.id}
-                    to={`/articles/${project.id}`}
+                    key={project._id || project.id}
+                    to={`/articles/${project._id || project.id}`}
                     className="group relative flex flex-col bg-zinc-50 overflow-hidden transition-colors hover:bg-white"
                 >
                     {/* Visual Anchor: Image with grayscale hover effect */}
