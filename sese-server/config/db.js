@@ -8,11 +8,12 @@ if (!process.env.VERCEL) {
 
 const connectDB = async () => {
     // Connect MongoDB at default port 27017.
+    console.log("=== DB CONNECTION ATTEMPTING... ===");
     try {
         const conn = await mongoose.connect(process.env.MONGO_URI, {
             // Options
         });
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
+        console.log(`=== DB SUCCESS: ${conn.connection.host} ===`);
     } catch (error) {
         console.error(`Error: ${error.message}`);
         process.exit(1); // Exit process with failure

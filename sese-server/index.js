@@ -1,4 +1,8 @@
 require("dotenv").config();
+console.log("=== SERVER STARTUP: PHASE 1 (INIT) ===");
+console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET);
+console.log("VERCEL env exists:", !!process.env.VERCEL);
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -11,7 +15,7 @@ const articleRoutes = require("./routes/articleRoutes");
 const app = express();
 
 // Database Connection
-connectDB();
+connectDB().then(() => console.log("=== SERVER STARTUP: PHASE 2 (DB CONNECTED) ==="));
 
 app.use(express.json());
 
