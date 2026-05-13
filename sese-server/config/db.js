@@ -8,7 +8,7 @@ const connectDB = async () => {
     // Connect MongoDB at default port 27017.
     try {
         const conn = await mongoose.connect(process.env.MONGO_URI, {
-            family: 4 // Force IPv4, helps with DNS SRV lookup issues on Windows/Node18+
+            family: 4
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
