@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 const dns = require('dns');
 
 // Override local DNS to fix querySrv ECONNREFUSED error in Node.js
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+if (!process.env.VERCEL) {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+}
 
 const connectDB = async () => {
     // Connect MongoDB at default port 27017.
