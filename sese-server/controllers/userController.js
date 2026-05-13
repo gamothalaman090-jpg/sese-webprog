@@ -59,22 +59,27 @@ const deleteUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log(`Login attempt for: ${email}`);
 
         // Find the user by email
         const user = await User.findOne({ email });
         if (!user) {
+            console.log(`User not found: ${email}`);
             return res.status(404).json({ message: 'User not found' });
         }
 
+        console.log(`User found: ${user.email}. Checking status and comparing passwords...`);
+
         // Check if the user is active
         if (!user.isActive) {
+            console.log(`User is inactive: ${email}`);
             return res.status(403).json({ message: 'Your account is inactive. Please contact support.' });
         }
-
 
         // Compare the provided password with the hashed password
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
+            console.log(`Password mismatch for: ${email}`);
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -84,6 +89,8 @@ const loginUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
+
+        console.log(`Login successful for: ${email}`);
 
         res.json({
             message: 'Login successful',
