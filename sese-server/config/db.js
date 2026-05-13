@@ -10,11 +10,12 @@ const connectDB = async () => {
     // Connect MongoDB at default port 27017.
     try {
         const conn = await mongoose.connect(process.env.MONGO_URI, {
-            family: 4
+            // Options
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
-        throw new Error(`Database connection failed: ${error.message}`);
+        console.error(`Error: ${error.message}`);
+        process.exit(1); // Exit process with failure
     }
 };
 
