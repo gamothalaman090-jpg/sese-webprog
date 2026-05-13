@@ -9,16 +9,23 @@ const inputClasses =
 const SignUpPage = () => {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const [username, setUsername] = useState("");
+    const [age, setAge] = useState("");
+    const [gender, setGender] = useState("");
+    const [contactNumber, setContactNumber] = useState("");
+    const [address, setAddress] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const navigate = useNavigate();
 
     const handleSignUp = async (e) => {
         e.preventDefault();
         setError("");
+        setSuccess("");
 
-        if (!firstName || !lastName || !email || !password) {
+        if (!firstName || !lastName || !username || !age || !gender || !contactNumber || !address || !email || !password) {
             return setError("All fields are required.");
         }
 
@@ -32,17 +39,27 @@ const SignUpPage = () => {
         }
 
         try {
-            // Default new sign-ups to "editor" role
+            // Default new sign-ups to "viewer" role
             await createUser({
                 firstName,
                 lastName,
+                username,
+                age,
+                gender,
+                contactNumber,
+                address,
                 email,
                 password,
-                type: "editor",
+                type: "viewer",
                 isActive: true
             });
-            // On success, redirect to login page
-            navigate("/auth/signin");
+            
+            setSuccess("Account created successfully! Redirecting to login...");
+            
+            // Wait for 2 seconds before redirecting
+            setTimeout(() => {
+                navigate("/auth/signin");
+            }, 2000);
         } catch (err) {
             setError(err.response?.data?.message || "Failed to create account.");
         }
@@ -69,6 +86,12 @@ const SignUpPage = () => {
                 </div>
             )}
 
+            {success && (
+                <div className="mt-4 p-3 bg-green-100 text-green-700 text-sm border-l-4 border-green-500">
+                    {success}
+                </div>
+            )}
+
             {/* Divider */}
             <div className="w-8 h-0.5 bg-[#0a0a0a] mt-6 mb-8" />
 
@@ -83,7 +106,6 @@ const SignUpPage = () => {
                             id="first-name"
                             type="text"
                             placeholder="Eunich"
-                            autoComplete="given-name"
                             className={inputClasses}
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
@@ -98,10 +120,76 @@ const SignUpPage = () => {
                             id="last-name"
                             type="text"
                             placeholder="Sese"
-                            autoComplete="family-name"
                             className={inputClasses}
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
+
+                {/* Username & Age Grid */}
+                <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <label htmlFor="username" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#71717a]">
+                            Username
+                        </label>
+                        <input
+                            id="username"
+                            type="text"
+                            placeholder="eunichsese"
+                            className={inputClasses}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="age" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#71717a]">
+                            Age
+                        </label>
+                        <input
+                            id="age"
+                            type="number"
+                            placeholder="21"
+                            className={inputClasses}
+                            value={age}
+                            onChange={(e) => setAge(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
+
+                {/* Gender & Contact Grid */}
+                <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <label htmlFor="gender" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#71717a]">
+                            Gender
+                        </label>
+                        <select
+                            id="gender"
+                            className={inputClasses}
+                            value={gender}
+                            onChange={(e) => setGender(e.target.value)}
+                            required
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="contact" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#71717a]">
+                            Contact Number
+                        </label>
+                        <input
+                            id="contact"
+                            type="tel"
+                            placeholder="09123456789"
+                            className={inputClasses}
+                            value={contactNumber}
+                            onChange={(e) => setContactNumber(e.target.value)}
                             required
                         />
                     </div>
@@ -116,10 +204,25 @@ const SignUpPage = () => {
                         id="signup-email"
                         type="email"
                         placeholder="you@example.com"
-                        autoComplete="email"
                         className={inputClasses}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+
+                {/* Address */}
+                <div>
+                    <label htmlFor="address" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#71717a]">
+                        Full Address
+                    </label>
+                    <input
+                        id="address"
+                        type="text"
+                        placeholder="123 Street, City, Country"
+                        className={inputClasses}
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
                         required
                     />
                 </div>
@@ -133,7 +236,6 @@ const SignUpPage = () => {
                         id="signup-password"
                         type="password"
                         placeholder="••••••••"
-                        autoComplete="new-password"
                         className={inputClasses}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

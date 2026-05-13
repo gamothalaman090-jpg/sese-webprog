@@ -22,7 +22,14 @@ const createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
         // Create the user with the hashed password
-        const user = await User.create({ ...req.body, password: hashedPassword });
+        const userData = { ...req.body, password: hashedPassword };
+        
+        // If username is not provided, use email as username
+        if (!userData.username) {
+            userData.username = userData.email;
+        }
+
+        const user = await User.create(userData);
 
         res.status(201).json(user);
     } catch (error) {

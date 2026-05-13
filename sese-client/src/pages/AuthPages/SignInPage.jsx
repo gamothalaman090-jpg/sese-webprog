@@ -10,11 +10,13 @@ const SignInPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const navigate = useNavigate();
 
     const handleSignIn = async (e) => {
         e.preventDefault();
         setError("");
+        setSuccess("");
 
         if (!email || !password) {
             return setError("Email and password are required.");
@@ -22,11 +24,17 @@ const SignInPage = () => {
 
         try {
             const { data } = await loginUser({ email, password });
+            
+            setSuccess("Login successful! Redirecting...");
+            
             localStorage.setItem("token", data.token);
             localStorage.setItem("firstName", data.firstName);
             localStorage.setItem("type", data.type);
-            // Redirect to landing page first, credentials stored in localStorage
-            navigate("/");
+            
+            // Wait for 1.5 seconds before redirecting
+            setTimeout(() => {
+                navigate("/");
+            }, 1500);
         } catch (err) {
             setError(err.response?.data?.message || "Login failed. Please check your credentials.");
         }
@@ -51,6 +59,12 @@ const SignInPage = () => {
             {error && (
                 <div className="mt-4 p-3 bg-red-100 text-red-700 text-sm border-l-4 border-red-500">
                     {error}
+                </div>
+            )}
+
+            {success && (
+                <div className="mt-4 p-3 bg-green-100 text-green-700 text-sm border-l-4 border-green-500">
+                    {success}
                 </div>
             )}
 
